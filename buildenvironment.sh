@@ -14,11 +14,12 @@ else
     chmod -R 777 StoryWeaver_Frontend
 fi
 
-if [ -d "StoryWeaver_Backend" ]; then
-    echo "StoryWeaver_Backend folder exists"
+if [ -d "StoryWeaver_Backend_Laravel" ]; then
+    echo "StoryWeaver_Backend_Laravel folder exists"
 else
-    git clone -b develop git@github.com:u-alexandru/StoryWeaver_Backend.git
-    chmod -R 777 StoryWeaver_Backend
+  echo "Cloning StoryWeaver_Backend_Laravel"
+    git clone -b develop git@github.com:u-alexandru/StoryWeaver_Backend_Laravel.git
+    chmod -R 777 StoryWeaver_Backend_Laravel
 fi
 
 # run docker compose
