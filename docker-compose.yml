@@ -1,14 +1,14 @@
 services:
   backend:
     build:
-      context: ./StoryWeaver_Backend_Laravel
+      context: ./StoryWeaver_V2_Backend
       dockerfile: Dockerfile
     image: backend
     container_name: backend
     hostname: backend
     restart: always
     volumes:
-      - ./StoryWeaver_Backend_Laravel:/app:delegated
+      - ./StoryWeaver_V2_Backend:/app:delegated
     entrypoint: ["./entrypoint.sh"]
     ports:
       - "8000:8000"
@@ -16,6 +16,9 @@ services:
       - db
       - redis
     environment:
+      - APP_URL=http://localhost:8000
+      - FRONTEND_URL=http://localhost:4200
+      - SESSION_DOMAIN=localhost
       - DB_HOST=db
       - DB_DATABASE=storyweaver_dev
       - DB_USERNAME=root
@@ -37,7 +40,7 @@ services:
       - storyweaver-network
   frontend:
     build:
-      context: ./StoryWeaver_Frontend
+      context: ./StoryWeaver_V2_Frontend
       dockerfile: Dockerfile
     image: frontend
     container_name: frontend
@@ -48,7 +51,7 @@ services:
     networks:
       - storyweaver-network
     volumes:
-      - ./StoryWeaver_Frontend:/app:delegated
+      - ./StoryWeaver_V2_Frontend:/app:delegated
     entrypoint: ["./entrypoint.sh"]
     depends_on:
       - backend
