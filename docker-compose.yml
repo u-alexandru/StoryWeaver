@@ -44,6 +44,7 @@ services:
     networks:
       - storyweaver-network
   frontend:
+    platform: linux/amd64
     build:
       context: ./StoryWeaver_V2_Frontend
       dockerfile: Dockerfile
