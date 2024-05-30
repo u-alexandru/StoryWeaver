@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   nginx:
     image: nginx:latest
@@ -11,6 +13,7 @@ services:
       - ./StoryWeaver_V2_Frontend/dist:/usr/share/nginx/html
     networks:
       - storyweaver-network
+
   backend:
     build:
       context: ./StoryWeaver_V2_Backend
@@ -21,40 +24,31 @@ services:
     restart: always
     volumes:
       - ./StoryWeaver_V2_Backend:/app:delegated
+      - /app/vendor
     entrypoint: ["./entrypoint.sh"]
     ports:
       - "8000:8000"
     depends_on:
-      - db
-      - redis
-    environment:
-      - APP_URL=http://api.storyweaver.localhost
-      - FRONTEND_URL=http://frontend.storyweaver.localhost
-      - SESSION_DOMAIN=.storyweaver.localhost
-      - DB_HOST=db
-      - DB_DATABASE=storyweaver_dev
-      - DB_USERNAME=root
-      - DB_PASSWORD=password
-      - DB_PORT=3306
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_PASSWORD=password
-      - MAIL_HOST=mailcatcher
-      - MAIL_PORT=1025
-      - MAIL_USERNAME=null
-      - MAIL_PASSWORD=null
-      - MAIL_ENCRYPTION=null
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
     networks:
       - storyweaver-network
+
   mailcatcher:
     image: schickling/mailcatcher
     container_name: mailcatcher
     hostname: mailcatcher
+    restart: always
     ports:
-      - '1080:1080' # Web UI
-      - '1025:1025' # SMTP server
+      - "1080:1080" # Web UI
+      - "1025:1025" # SMTP server
     networks:
       - storyweaver-network
+
   frontend:
     platform: linux/amd64
     build:
@@ -70,29 +64,40 @@ services:
       - storyweaver-network
     volumes:
       - ./StoryWeaver_V2_Frontend:/app:delegated
+      - /app/node_modules
     entrypoint: ["./entrypoint.sh"]
     depends_on:
       - backend
+
   redis:
     image: redis:latest
     container_name: redis
     hostname: redis
     restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     command: redis-server --save 20 1 --loglevel warning --requirepass password
     ports:
       - "6379:6379"
     volumes:
       - cache:/data
       - ./redis.conf:/etc/redis/redis.conf
-    depends_on:
-      - db
     networks:
       - storyweaver-network
+
   db:
+    image: mysql:latest
     container_name: db
     hostname: db
-    image: mysql:latest
     restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     ports:
       - "3307:3306"
     environment:
@@ -108,6 +113,7 @@ volumes:
     driver: local
   db-volume:
     driver: local
+
 networks:
   storyweaver-network:
     external: false
